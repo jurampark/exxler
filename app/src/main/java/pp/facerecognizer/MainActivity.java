@@ -72,6 +72,8 @@ import pp.facerecognizer.tracking.MultiBoxTracker;
 public class MainActivity extends AppCompatActivity {
 
   private static final Logger LOGGER = new Logger();
+  private static int REGISTER_MODE = 1;
+  private static int Add_MORE_MODE = 1;
   private static int RECOGNITION_REQUEST_CODE = 1;
 
   private FloatingActionButton button;
@@ -86,6 +88,13 @@ public class MainActivity extends AppCompatActivity {
     if (requestCode == RECOGNITION_REQUEST_CODE) {
       if (data.hasExtra("response") &&
           data.getIntExtra("response", 0) == android.R.string.no) {
+        Intent intent = new Intent(getApplicationContext(), RegisterActivity.class);
+        // TODO(jurampark): add mode depending on entrance flow
+        intent.putExtra("Mode", REGISTER_MODE);
+        // TODO(jurampark): pass label(ldap) after selection
+        intent.putExtra("Label", "jurampark");
+        startActivity(intent);
+
         startActivity(new Intent(getApplicationContext(), RegisterActivity.class));
       }
     }
