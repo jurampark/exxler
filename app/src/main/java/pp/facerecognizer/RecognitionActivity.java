@@ -59,7 +59,7 @@ public class RecognitionActivity extends CameraActivity implements OnImageAvaila
     private static final int FACE_SIZE = 160;
     private static final int CROP_SIZE = 300;
 
-    private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
+    private static final Size DESIRED_PREVIEW_SIZE = new Size(720, 480);
 
     private static final boolean SAVE_PREVIEW_BITMAP = false;
     private static final float TEXT_SIZE_DIP = 10;

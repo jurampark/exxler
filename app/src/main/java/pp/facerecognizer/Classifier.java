@@ -122,7 +122,7 @@ public class Classifier {
     private FaceNet faceNet;
     private LibSVM svm;
 
-    private List<String> classNames;
+    private ArrayList<String> classNames;
 
     private Classifier() {}
 
@@ -215,6 +215,10 @@ public class Classifier {
 
             svm.train(label, list);
         }
+    }
+
+    int getIndex(String name) {
+        return classNames.indexOf(name);
     }
 
     int addPerson(String name) {

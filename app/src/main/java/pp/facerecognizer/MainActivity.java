@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
   private static final Logger LOGGER = new Logger();
   private static int REGISTER_MODE = 1;
-  private static int Add_MORE_MODE = 1;
+  private static int Add_MORE_MODE = 2;
   private static int RECOGNITION_REQUEST_CODE = 1;
 
   private FloatingActionButton button;
@@ -94,8 +94,6 @@ public class MainActivity extends AppCompatActivity {
         // TODO(jurampark): pass label(ldap) after selection
         intent.putExtra("Label", "jurampark");
         startActivity(intent);
-
-        startActivity(new Intent(getApplicationContext(), RegisterActivity.class));
       }
     }
   }
