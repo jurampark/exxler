@@ -32,6 +32,7 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 import android.view.View;
@@ -41,6 +42,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 
 import android.widget.ListView;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -69,11 +71,25 @@ import pp.facerecognizer.tracking.MultiBoxTracker;
  */
 public class MainActivity extends AppCompatActivity {
 
+  private static final Logger LOGGER = new Logger();
+  private static int RECOGNITION_REQUEST_CODE = 1;
+
   private FloatingActionButton button;
   private List<String> users = new ArrayList<>();
   private ListView userListView;
   private TextInputEditText usernameInput;
   private ArrayAdapter<String> userListViewAdapter;
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    LOGGER.i("onActivityResult", data.toString());
+    if (requestCode == RECOGNITION_REQUEST_CODE) {
+      if (data.hasExtra("response") &&
+          data.getIntExtra("response", 0) == android.R.string.no) {
+        startActivity(new Intent(getApplicationContext(), RegisterActivity.class));
+      }
+    }
+  }
 
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
@@ -121,7 +137,8 @@ public class MainActivity extends AppCompatActivity {
 
     button = findViewById(R.id.camera_button);
     button.setOnClickListener(view ->
-        startActivity(new Intent(getApplicationContext(), RecognitionActivity.class)));
+        startActivityForResult(new Intent(getApplicationContext(), RecognitionActivity.class),
+            RECOGNITION_REQUEST_CODE));
 
   }
 
