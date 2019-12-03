@@ -18,15 +18,15 @@
         android:theme="@style/AppTheme">
 
         <activity android:name=".MainActivity"
-            android:screenOrientation="portrait">
+            android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".RecognitionActivity" android:screenOrientation="portrait">
+        <activity android:name=".RecognitionActivity" android:screenOrientation="landscape">
         </activity>
-        <activity android:name=".RegisterActivity" android:screenOrientation="portrait">
+        <activity android:name=".RegisterActivity" android:screenOrientation="landscape">
         </activity>
     </application>
 </manifest>
