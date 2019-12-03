@@ -137,6 +137,7 @@ public class RecognitionActivity extends CameraActivity implements OnImageAvaila
         borderedText = new BorderedText(textSizePx);
         borderedText.setTypeface(Typeface.MONOSPACE);
 
+        // passing dialog
         tracker = new MultiBoxTracker(this);
 
         previewWidth = size.getWidth();
@@ -279,6 +280,7 @@ public class RecognitionActivity extends CameraActivity implements OnImageAvaila
                             classifier.recognizeImage(croppedBitmap,cropToFrameTransform);
 
                     lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+                    // passing dialog
                     tracker.trackResults(mappedRecognitions, luminanceCopy, currTimestamp);
                     trackingOverlay.postInvalidate();
 

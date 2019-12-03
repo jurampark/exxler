@@ -15,6 +15,8 @@ limitations under the License.
 
 package pp.facerecognizer.tracking;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -96,6 +98,8 @@ public class MultiBoxTracker {
     private int sensorOrientation;
     private Context context;
 
+    private boolean confirmDialogShowing = false;
+
     public MultiBoxTracker(final Context context) {
         this.context = context;
         for (final int color : COLORS) {
@@ -163,6 +167,8 @@ public class MultiBoxTracker {
     }
 
     public synchronized void draw(final Canvas canvas) {
+        if(confirmDialogShowing) return;
+
         final boolean rotated = sensorOrientation % 180 == 90;
         final float multiplier =
                 Math.min(canvas.getHeight() / (float) (rotated ? frameWidth : frameHeight),
@@ -191,6 +197,21 @@ public class MultiBoxTracker {
                     !TextUtils.isEmpty(recognition.title)
                             ? String.format("%s %.2f", recognition.title, recognition.detectionConfidence)
                             : String.format("%.2f", recognition.detectionConfidence);
+
+
+            if (!TextUtils.isEmpty(recognition.title)) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setTitle("Confirm it's you!").setMessage("Are you " + recognition.title + "?")
+                    .setPositiveButton(
+                        android.R.string.ok,
+                        (dialogInterface, i) -> ((Activity)context).finish())
+                    .setNegativeButton(android.R.string.no,
+                        (dialogInterface, i) -> ((Activity)context).finish())
+                    .show();
+                confirmDialogShowing = true;
+                return;
+            }
+
             borderedText.drawText(canvas, trackedPos.left + cornerSize, trackedPos.bottom, labelString);
         }
     }
