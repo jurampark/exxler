@@ -7,4 +7,5 @@
 
     <string name="add_person">add person</string>
     <string name="update_person">update person</string>
+    <string name="text_button_complete_register">Complete</string>
 </resources>
