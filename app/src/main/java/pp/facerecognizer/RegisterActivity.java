@@ -19,22 +19,19 @@ package pp.facerecognizer;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
-import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.net.Uri;
+import android.opengl.Visibility;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Size;
-import android.util.TypedValue;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
@@ -42,16 +39,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.Vector;
 
-import androidx.appcompat.app.AlertDialog;
-import pp.facerecognizer.env.BorderedText;
 import pp.facerecognizer.env.FileUtils;
 import pp.facerecognizer.env.ImageUtils;
 import pp.facerecognizer.env.Logger;
-import pp.facerecognizer.tracking.MultiBoxTracker;
 
 /**
 * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
@@ -62,10 +54,14 @@ public class RegisterActivity extends CameraActivity implements OnImageAvailable
 
     private static final int FACE_SIZE = 160;
     private static final int CROP_SIZE = 300;
+    private static String INTENT_MODE = "Mode";
+    private static String INTENT_LABEL= "Label";
+    private static int REGISTER_MODE = 1;
+    private static int ADD_MORE_MODE = 2;
+    private static int REGISTER_TRAIN_SIZE = 10;
+    private static int ADD_MORE_TRAIN_SIZE = 1;
 
-    private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
-
-    private static final float TEXT_SIZE_DIP = 10;
+    private static final Size DESIRED_PREVIEW_SIZE = new Size(720, 480);
 
     private Integer sensorOrientation;
 
@@ -79,59 +75,70 @@ public class RegisterActivity extends CameraActivity implements OnImageAvailable
     private Matrix cropToFrameTransform;
 
 
-    private ArrayList<Uri> trainPhotoUris = new ArrayList<>();
-
+    private ArrayList<Uri> trainPhotoUris;
 
     private Snackbar initSnackbar;
     private Snackbar trainSnackbar;
     private Snackbar saveSnackbar;
 
-    private FloatingActionButton button;
+    private FloatingActionButton captureButton;
     private MaterialButton completeButton;
 
     private boolean initialized = false;
     private boolean training = false;
+
+    private int classifyLabel = 0;
+    private int minTrainSize = REGISTER_TRAIN_SIZE;
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // clean
+        deletePhotos();
+    }
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
+        trainPhotoUris = new ArrayList<>();
         FrameLayout container = findViewById(R.id.container);
         initSnackbar = Snackbar.make(container, "Initializing...", Snackbar.LENGTH_INDEFINITE);
-        saveSnackbar = Snackbar.make(container, "Saving...", Snackbar.LENGTH_INDEFINITE);
+        saveSnackbar = Snackbar.make(container, "Start Capturing...", Snackbar.LENGTH_INDEFINITE);
         trainSnackbar = Snackbar.make(container, "Training data...", Snackbar.LENGTH_INDEFINITE);
 
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_edittext, null);
-        EditText editText = dialogView.findViewById(R.id.edit_text);
-        AlertDialog editDialog = new AlertDialog.Builder(RegisterActivity.this)
-                .setTitle(R.string.enter_name)
-                .setView(dialogView)
-                .setPositiveButton(getString(R.string.ok), (dialogInterface, i) -> {
-                    int idx = classifier.addPerson(editText.getText().toString());
-                    startTraining(idx - 1);
-                })
-                .create();
-
         completeButton = findViewById(R.id.complete_button);
-        completeButton.setOnClickListener(view ->
-                new AlertDialog.Builder(RegisterActivity.this)
-                        .setTitle(getString(R.string.select_name))
-                        .setItems(classifier.getClassNames(), (dialogInterface, i) -> {
-                            if (i == 0) {
-                                editDialog.show();
-                            } else {
-                                startTraining(i - 1);
-                            }
-                        })
-                        .show());
-        button = findViewById(R.id.add_button);
-        button.setOnClickListener(view -> {
+        completeButton.setVisibility(View.GONE);
+        completeButton.setOnClickListener(view -> startTraining(classifyLabel));
+
+        // upon cancel, go back to previous activity
+        findViewById(R.id.cancel_button).setOnClickListener(view -> {
+            deletePhotos();
+            finish();
+        });
+
+        captureButton = findViewById(R.id.add_button);
+        captureButton.setOnClickListener(view -> {
             savingFile = true;
+
             runInBackground(
                     () -> {
                         LOGGER.i("Saving image...");
-                        saveSnackbar.show();
+
+                        runOnUiThread(() -> {
+                                    int remainingSize = minTrainSize - trainPhotoUris.size() - 1;
+                                    if (remainingSize > 0) {
+                                        // need more training data
+                                        saveSnackbar.setText("Saving..... " + remainingSize + " more photo to capture! woohoo!");
+                                        saveSnackbar.show();
+                                    } else if (remainingSize == 0) {
+                                        saveSnackbar.setText("Ready to complete anytime");
+                                        saveSnackbar.setDuration(BaseTransientBottomBar.LENGTH_LONG);
+                                        saveSnackbar.show();
+                                        completeButton.setVisibility(View.VISIBLE);
+                                    }
+                                });
                         File imageFile = null;
                         try {
                             imageFile = createImageFile();
@@ -145,12 +152,12 @@ public class RegisterActivity extends CameraActivity implements OnImageAvailable
                             LOGGER.e(e, e.getMessage());
                             e.printStackTrace();
                         }
-                        saveSnackbar.dismiss();
                         LOGGER.i("Saving image complete..." + imageFile.getAbsolutePath());
                         savingFile = false;
                     });
         });
     }
+
     public static Bitmap RotateBitmap(Bitmap source, float angle)
     {
         Matrix matrix = new Matrix();
@@ -204,7 +211,19 @@ public class RegisterActivity extends CameraActivity implements OnImageAvailable
             finish();
         }
 
-        runOnUiThread(()-> initSnackbar.dismiss());
+        String labelName = getIntent().getStringExtra(INTENT_LABEL);
+        classifyLabel = classifier.getIndex(labelName);
+        if (classifyLabel < 0) {
+            LOGGER.w(labelName + " label not found!");
+            classifyLabel = classifier.addPerson(labelName);
+        }
+        if (getIntent().getIntExtra(INTENT_MODE, REGISTER_MODE) == REGISTER_MODE) {
+            minTrainSize = REGISTER_TRAIN_SIZE;
+        }else {
+            minTrainSize = ADD_MORE_TRAIN_SIZE;
+        }
+
+        runOnUiThread(()-> {initSnackbar.dismiss(); saveSnackbar.show();});
         initialized = true;
     }
 
@@ -249,9 +268,12 @@ public class RegisterActivity extends CameraActivity implements OnImageAvailable
     }
 
     public void startTraining(int index) {
+        if (training) {
+            return;
+        }
         trainSnackbar.show();
         completeButton.setEnabled(false);
-        button.setEnabled(false);
+        captureButton.setEnabled(false);
         training = true;
 
         new Thread(() -> {
@@ -261,13 +283,26 @@ public class RegisterActivity extends CameraActivity implements OnImageAvailable
                 LOGGER.e(e, "Exception!");
             } finally {
                 training = false;
+                deletePhotos();
+                // TODO(jurampark): should finish this activity, and complete checkin
+                finish();
             }
             runOnUiThread(() -> {
                 trainSnackbar.dismiss();
                 completeButton.setEnabled(false);
-                button.setEnabled(true);
+                captureButton.setEnabled(true);
             });
         }).start();
 
+    }
+
+    private void deletePhotos() {
+        for (Uri uri : trainPhotoUris) {
+            File fdelete = new File(uri.getPath());
+            if (fdelete.exists()) {
+                fdelete.delete();
+            }
+        }
+        trainPhotoUris.clear();
     }
 }
