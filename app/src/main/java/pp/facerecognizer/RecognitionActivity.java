@@ -34,7 +34,7 @@ import android.util.Size;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
 import androidx.appcompat.app.AlertDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -97,7 +97,7 @@ public class RecognitionActivity extends CameraActivity implements OnImageAvaila
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        FrameLayout container = findViewById(R.id.container);
+        RelativeLayout container = findViewById(R.id.container);
         initSnackbar = Snackbar.make(container, "Initializing...", Snackbar.LENGTH_INDEFINITE);
         trainSnackbar = Snackbar.make(container, "Training data...", Snackbar.LENGTH_INDEFINITE);
 
@@ -111,19 +111,6 @@ public class RecognitionActivity extends CameraActivity implements OnImageAvaila
                     performFileSearch(idx - 1);
                 })
                 .create();
-
-        button = findViewById(R.id.add_button);
-        button.setOnClickListener(view ->
-                new AlertDialog.Builder(RecognitionActivity.this)
-                        .setTitle(getString(R.string.select_name))
-                        .setItems(classifier.getClassNames(), (dialogInterface, i) -> {
-                            if (i == 0) {
-                                editDialog.show();
-                            } else {
-                                performFileSearch(i - 1);
-                            }
-                        })
-                        .show());
     }
 
     @Override

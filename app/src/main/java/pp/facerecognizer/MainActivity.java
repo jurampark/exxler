@@ -16,54 +16,26 @@
 
 package pp.facerecognizer;
 
-import android.content.ClipData;
 import android.content.Intent;
-import android.content.res.AssetManager;
-import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.Typeface;
-import android.media.ImageReader.OnImageAvailableListener;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
-import android.util.Size;
-import android.util.TypedValue;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.FrameLayout;
 
 import android.widget.ListView;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 
 import com.google.android.material.textfield.TextInputEditText;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Vector;
 
-import androidx.appcompat.app.AlertDialog;
-import pp.facerecognizer.Classifier.Recognition;
-import pp.facerecognizer.env.BorderedText;
-import pp.facerecognizer.env.FileUtils;
-import pp.facerecognizer.env.ImageUtils;
 import pp.facerecognizer.env.Logger;
-import pp.facerecognizer.tracking.MultiBoxTracker;
 
 /**
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
@@ -105,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-    setContentView(R.layout.actiivty_main);
+    setContentView(R.layout.activity_main);
 
     userListView = findViewById(R.id.userListView);
     usernameInput = findViewById(R.id.usernameInput);
